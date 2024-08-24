@@ -182,5 +182,8 @@ async def chatroom(request: Request, username: str, room: str, language: str):
     return templates.TemplateResponse("chat.html", {"request": request, "username": username, "room": room, "language": language})
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(socketio_app, host="0.0.0.0", port=5000)
+
+    # Use the port provided by Heroku or default to 5000 for local development
+    port = int(os.environ.get("PORT", 5000))
+    uvicorn.run(socketio_app, host="0.0.0.0", port=port)
+
