@@ -1,0 +1,63 @@
+import socketio
+import threading
+import time
+
+# URL of your Heroku application
+BASE_URL = 'https://chatroomkatocx-24f05df15390.herokuapp.com/'  # Replace with your actual Heroku app URL
+
+# Configuration
+NUM_USERS = 50  # Number of simulated users
+MESSAGES_PER_USER = 10  # Number of messages each user will send
+CHATROOM = 'testroom'  # Chatroom to join
+USERNAME_PREFIX = 'User'  # Prefix for usernames
+
+# SocketIO Client
+sio_clients = []
+
+def user_simulation(user_id):
+    """Simulate a single user connecting and sending messages."""
+    username = f"{USERNAME_PREFIX}{user_id}"
+    room = CHATROOM
+
+    sio = socketio.Client()
+    sio_clients.append(sio)
+
+    # Connect to the chatroom
+    try:
+        sio.connect(BASE_URL, transports=['websocket'])
+        sio.emit('join', {'username': username, 'room': room, 'language': 'english'})
+
+        # Simulate sending messages
+        for i in range(MESSAGES_PER_USER):
+            message = f"Message {i+1} from {username}"
+            sio.emit('message', {'msg': message, 'username': username, 'room': room})
+            time.sleep(0.1)  # Short delay to mimic typing
+
+        sio.disconnect()
+        print(f"{username} finished sending messages.")
+    except Exception as e:
+        print(f"An error occurred for {username}: {e}")
+
+def stress_test():
+    """Run stress test by simulating multiple users."""
+    threads = []
+
+    for user_id in range(NUM_USERS):
+        thread = threading.Thread(target=user_simulation, args=(user_id,))
+        threads.append(thread)
+        thread.start()
+        time.sleep(0.05)  # Stagger user joins slightly
+
+    # Wait for all threads to complete
+    for thread in threads:
+        thread.join()
+
+    # Ensure all clients are disconnected
+    for sio in sio_clients:
+        if sio.connected:
+            sio.disconnect()
+
+    print("Stress test completed.")
+
+if __name__ == '__main__':
+    stress_test()
