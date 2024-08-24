@@ -164,22 +164,26 @@
 
     <script type="text/javascript">
         console.log("Initializing chat room...");
-
-        var socket = io("http://localhost:5000", { transports: ['websocket', 'polling'] });
-
+    
+        // Determine the correct WebSocket URL
+        var protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        var socketUrl = protocol + window.location.host;
+    
+        var socket = io(socketUrl, { transports: ['websocket', 'polling'] });
+    
         var username = "{{ username }}";
         var room = "{{ room }}";
         var language = "{{ language }}";
-
+    
         console.log("Username:", username);
         console.log("Room:", room);
         console.log("Language:", language);
-
+    
         socket.on('connect', function() {
             console.log("Connected to the server via Socket.IO");
             socket.emit('join', {'username': username, 'room': room, 'language': language});
         });
-
+    
         socket.on('user_list', function(data) {
             console.log("Received user list:", data.users);
             var userList = document.getElementById('user-list');
@@ -189,7 +193,7 @@
                 userList.innerHTML = '<strong>Active Users:</strong> None';
             }
         });
-
+    
         socket.on('message', function(data) {
             console.log("Received message from server:", data);
             var messages = document.getElementById('messages');
@@ -200,15 +204,15 @@
             messages.appendChild(message);
             messages.scrollTop = messages.scrollHeight;
         });
-
+    
         socket.on('disconnect', function() {
             console.log("Socket.IO connection closed");
         });
-
+    
         socket.on('error', function(error) {
             console.log("Socket.IO Error: " + error);
         });
-
+    
         document.getElementById('chat-form').onsubmit = function(e) {
             e.preventDefault();
             var message = document.getElementById('message').value;
@@ -220,11 +224,12 @@
                 console.log("Message is empty, not sending.");
             }
         };
-
+    
         window.onbeforeunload = function() {
             console.log("Leaving room:", room);
             socket.emit('leave', {'username': username, 'room': room, 'language': language});
         };
     </script>
+    
 </body>
 </html>
