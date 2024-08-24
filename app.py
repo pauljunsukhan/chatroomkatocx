@@ -8,6 +8,7 @@ from openai import OpenAI
 import os
 from copy import deepcopy
 from threading import Lock
+import uvicorn
 
 # Initialize FastAPI app
 app = FastAPI()
