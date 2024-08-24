@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Room</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #FFEFD5; /* Warm peach background */
+            background-color: #FFEFD5;
             color: #333;
             margin: 0;
             padding: 0;
@@ -18,7 +18,6 @@
             height: 100vh;
             overflow: hidden;
         }
-
         #chat-container {
             display: flex;
             flex-direction: column;
@@ -32,23 +31,47 @@
             overflow: hidden;
             background-color: #fff;
         }
-
         #chat-header {
-            background-color: #FF7F50; /* Coral header */
+            background-color: #FF7F50;
             color: white;
             padding: 15px;
             text-align: center;
             font-size: 20px;
             font-weight: bold;
         }
+        #user-list {
+            padding: 10px;
+            border-bottom: 1px solid #FFB6C1;
+            background-color: #FFF0F5;
+            display: flex; /* Display as flexbox */
+            flex-direction: row; /* Horizontal layout */
+            overflow-x: auto; /* Horizontal scrolling */
+            white-space: nowrap; /* Prevent wrapping */
+            max-height: 100px;
+        }
+
+        #user-list div {
+            margin-right: 5px; /* Add space between user names */
+            flex-shrink: 0; /* Prevent usernames from shrinking */
+            position: relative; /* Establish positioning context for ::after */
+        }
+
+        #user-list div::after {
+            content: ''; /* Required to display pseudo-element */
+            display: inline-block; /* Ensure line is inline with the text */
+            height: 100%; /* Height of the vertical line */
+            width: 1px; /* Thickness of the vertical line */
+            background-color: #FF7F50; /* Color of the line matching the upper banner */
+            margin-left: 5px; /* Margin left for spacing after the username */
+            vertical-align: middle; /* Align line vertically in the middle */
+        }
 
         #messages {
             padding: 20px;
             overflow-y: auto;
             flex-grow: 1;
-            background-color: #FFF5EE; /* Light coral background for messages */
+            background-color: #FFF5EE;
         }
-
         .message {
             margin-bottom: 15px;
             padding: 10px;
@@ -56,39 +79,33 @@
             max-width: 80%;
             word-wrap: break-word;
         }
-
         .message strong {
-            color: #FF4500; /* OrangeRed color for usernames */
+            color: #FF4500;
         }
-
         .message.user {
-            background-color: #FFD700; /* Gold for user's own messages */
+            background-color: #FFD700;
             align-self: flex-end;
         }
-
         .message.other {
-            background-color: #F0E68C; /* Khaki for other users' messages */
+            background-color: #F0E68C;
             align-self: flex-start;
         }
-
         #chat-form {
             display: flex;
             padding: 10px;
-            background-color: #FFF0F5; /* LavenderBlush background */
-            border-top: 1px solid #FFB6C1; /* LightPink border */
+            background-color: #FFF0F5;
+            border-top: 1px solid #FFB6C1;
         }
-
         #message {
             flex-grow: 1;
             padding: 10px;
             font-size: 16px;
             border-radius: 20px;
-            border: 1px solid #FFB6C1; /* LightPink border */
+            border: 1px solid #FFB6C1;
             outline: none;
         }
-
         #send-button {
-            background-color: #FF6347; /* Tomato color */
+            background-color: #FF6347;
             color: white;
             border: none;
             border-radius: 20px;
@@ -98,44 +115,36 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-
         #send-button:hover {
-            background-color: #FF4500; /* OrangeRed hover effect */
+            background-color: #FF4500;
         }
-
         @media (orientation: landscape) {
             #chat-container {
                 width: 70vw;
                 height: 70vh;
             }
         }
-
         @media (orientation: portrait) {
             #chat-container {
                 width: 90vw;
                 height: 90vh;
             }
         }
-
         @media (max-width: 600px) {
             #chat-container {
                 width: 100vw;
                 height: 100vh;
             }
-
             #messages {
                 padding: 10px;
             }
-
             #chat-form {
                 flex-direction: column;
             }
-
             #message {
                 margin-bottom: 10px;
                 width: 100%;
             }
-
             #send-button {
                 width: 100%;
             }
@@ -144,7 +153,8 @@
 </head>
 <body>
     <div id="chat-container">
-        <div id="chat-header">Chat Room: {{ room }}</div>
+        <div id="chat-header">{{ username }}: {{ room }}</div> <!-- Updated to show both username and room -->
+        <div id="user-list"><strong>Active Users:</strong></div>
         <div id="messages"></div>
         <form id="chat-form">
             <input type="text" id="message" autocomplete="off" placeholder="Type your message here..." required>
@@ -153,31 +163,66 @@
     </div>
 
     <script type="text/javascript">
-        var socket = io();
+        console.log("Initializing chat room...");
+
+        var socket = io("http://localhost:5000", { transports: ['websocket', 'polling'] });
+
         var username = "{{ username }}";
         var room = "{{ room }}";
         var language = "{{ language }}";
 
-        socket.emit('join', {'username': username, 'room': room, 'language': language});
+        console.log("Username:", username);
+        console.log("Room:", room);
+        console.log("Language:", language);
+
+        socket.on('connect', function() {
+            console.log("Connected to the server via Socket.IO");
+            socket.emit('join', {'username': username, 'room': room, 'language': language});
+        });
+
+        socket.on('user_list', function(data) {
+            console.log("Received user list:", data.users);
+            var userList = document.getElementById('user-list');
+            if (data.users && data.users.length > 0) {
+                userList.innerHTML = '<strong>Active Users:</strong>&nbsp;' + data.users.map(user => `<div>${user}</div>`).join('');
+            } else {
+                userList.innerHTML = '<strong>Active Users:</strong> None';
+            }
+        });
 
         socket.on('message', function(data) {
+            console.log("Received message from server:", data);
             var messages = document.getElementById('messages');
             var message = document.createElement('div');
             message.classList.add('message');
             message.classList.add(data.username === username ? 'user' : 'other');
             message.innerHTML = '<strong>' + data.username + ':</strong> ' + data.msg;
             messages.appendChild(message);
-            messages.scrollTop = messages.scrollHeight;  // Auto-scroll to the bottom
+            messages.scrollTop = messages.scrollHeight;
+        });
+
+        socket.on('disconnect', function() {
+            console.log("Socket.IO connection closed");
+        });
+
+        socket.on('error', function(error) {
+            console.log("Socket.IO Error: " + error);
         });
 
         document.getElementById('chat-form').onsubmit = function(e) {
             e.preventDefault();
             var message = document.getElementById('message').value;
-            socket.emit('message', {'msg': message, 'username': username, 'room': room, 'language': language});
-            document.getElementById('message').value = '';
+            console.log("Sending message:", message);
+            if (message.trim() !== '') {
+                socket.emit('message', {'msg': message, 'username': username, 'room': room, 'language': language});
+                document.getElementById('message').value = '';
+            } else {
+                console.log("Message is empty, not sending.");
+            }
         };
 
         window.onbeforeunload = function() {
+            console.log("Leaving room:", room);
             socket.emit('leave', {'username': username, 'room': room, 'language': language});
         };
     </script>

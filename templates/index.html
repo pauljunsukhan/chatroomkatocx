@@ -85,24 +85,24 @@
             }
         }
     </style>
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 </head>
 <body>
     <div id="login-container">
         <div id="login-header">Join Chat Room</div>
-        <form action="/" method="POST">
+        <form id="join-form" action="/chat" method="post">
             <label for="username">Enter your name:</label>
             <input type="text" id="username" name="username" required>
 
             <label for="room">Select a chat room:</label>
             <select id="room" name="room">
+                <option value="">-- Select a room --</option>
                 {% for room in chatrooms %}
                     <option value="{{ room }}">{{ room }}</option>
                 {% endfor %}
             </select>
 
             <label for="new-room">Or enter a new room name:</label>
-            <input type="text" id="new-room" name="new-room">
+            <input type="text" id="new-room" name="new_room">
 
             <label for="language">Select your preferred language:</label>
             <select id="language" name="language" required>
@@ -115,27 +115,30 @@
     </div>
 
     <script>
-        var socket = io();
+        const form = document.getElementById('join-form');
+        const roomSelect = document.getElementById('room');
+        const newRoomInput = document.getElementById('new-room');
 
-        // Listen for new chatrooms and update the list
-        socket.on('new_chatroom', function(room) {
-            var roomSelect = document.getElementById('room');
-            var option = document.createElement('option');
-            option.value = room;
-            option.textContent = room;
-            roomSelect.appendChild(option);
-        });
-
-        // Disable room selection when entering a new room name
-        document.getElementById('new-room').addEventListener('input', function() {
-            var roomSelect = document.getElementById('room');
+        newRoomInput.addEventListener('input', function() {
             roomSelect.disabled = this.value.trim() !== '';
+            if (this.value.trim() !== '') {
+                roomSelect.value = '';  // Clear the selected room
+            }
         });
 
-        // Disable new room input when selecting an existing room
-        document.getElementById('room').addEventListener('change', function() {
-            var newRoomInput = document.getElementById('new-room');
+        roomSelect.addEventListener('change', function() {
             newRoomInput.disabled = this.value.trim() !== '';
+            if (this.value.trim() !== '') {
+                newRoomInput.value = '';  // Clear the new room input
+            }
+        });
+
+        form.addEventListener('submit', function(event) {
+            // Ensure one of the room fields is filled
+            if (!roomSelect.value && !newRoomInput.value.trim()) {
+                event.preventDefault();
+                alert("Please select a room or enter a new room name.");
+            }
         });
     </script>
 </body>

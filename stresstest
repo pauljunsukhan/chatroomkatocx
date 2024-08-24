@@ -1,9 +1,13 @@
 import socketio
 import threading
 import time
+import random
+from faker import Faker
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
 
 # URL of your Heroku application
-BASE_URL = 'https://chatroomkatocx-24f05df15390.herokuapp.com/'  # Replace with your actual Heroku app URL
+BASE_URL = 'http://localhost:5000/'  # Replace with your actual Heroku app URL
 
 # Configuration
 NUM_USERS = 50  # Number of simulated users
@@ -11,13 +15,35 @@ MESSAGES_PER_USER = 10  # Number of messages each user will send
 CHATROOM = 'testroom'  # Chatroom to join
 USERNAME_PREFIX = 'User'  # Prefix for usernames
 
+# Initialize Faker for English
+faker = Faker()
+
+# Initialize Transformers for Korean
+tokenizer = AutoTokenizer.from_pretrained("skt/kogpt2-base-v2")
+model = AutoModelForCausalLM.from_pretrained("skt/kogpt2-base-v2")
+
 # SocketIO Client
 sio_clients = []
+
+def generate_random_message():
+    """Generate a random message in either English or Korean."""
+    language = random.choice(['english', 'korean'])
+    
+    if language == 'english':
+        return faker.sentence(), language
+    else:
+        # Generate Korean text using Transformers
+        input_ids = tokenizer.encode("안녕하세요", return_tensors='pt')
+        with torch.no_grad():
+            outputs = model.generate(input_ids, max_length=50, num_return_sequences=1)
+        message = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        return message, language
 
 def user_simulation(user_id):
     """Simulate a single user connecting and sending messages."""
     username = f"{USERNAME_PREFIX}{user_id}"
     room = CHATROOM
+    language = 'english' if user_id < NUM_USERS // 2 else 'korean'
 
     sio = socketio.Client()
     sio_clients.append(sio)
@@ -25,13 +51,13 @@ def user_simulation(user_id):
     # Connect to the chatroom
     try:
         sio.connect(BASE_URL, transports=['websocket'])
-        sio.emit('join', {'username': username, 'room': room, 'language': 'english'})
+        sio.emit('join', {'username': username, 'room': room, 'language': language})
 
         # Simulate sending messages
         for i in range(MESSAGES_PER_USER):
-            message = f"Message {i+1} from {username}"
+            message, message_language = generate_random_message()
             sio.emit('message', {'msg': message, 'username': username, 'room': room})
-            time.sleep(0.1)  # Short delay to mimic typing
+            time.sleep(0.5)  # Short delay to mimic typing
 
         sio.disconnect()
         print(f"{username} finished sending messages.")
