@@ -25,7 +25,7 @@
             width: 90vw;
             max-width: 400px;
             padding: 20px;
-            background-color: #fff;
+            background-color: #fff; /* White background for the container */
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
         }
@@ -43,18 +43,24 @@
         label {
             font-weight: bold;
             margin-top: 10px;
+            display: inline-block;
+            width: 100%; /* Ensure labels are full width for alignment */
         }
 
         input[type="text"],
         select {
-            width: 100%;
+            width: calc(100% - 20px); /* Make the input fields not too long */
             padding: 10px;
-            margin-top: 5px;
-            margin-bottom: 15px;
+            margin-top: 5px; /* Reduce margin to bring fields closer */
+            margin-bottom: 10px; /* Reduce margin to bring fields closer */
             border-radius: 20px;
             border: 1px solid #FFB6C1; /* LightPink border */
             outline: none;
             font-size: 16px;
+            background-color: #fff; /* White background for input fields */
+            color: #333; /* Text color */
+            appearance: none; /* Removes default styling */
+            -webkit-appearance: none; /* Removes default styling on Safari */
         }
 
         #join-button {
@@ -66,6 +72,8 @@
             font-size: 16px;
             cursor: pointer;
             transition: background-color 0.3s;
+            width: 100%; /* Full width for consistency */
+            margin-top: 10px; /* Add some margin at the top for spacing */
         }
 
         #join-button:hover {
