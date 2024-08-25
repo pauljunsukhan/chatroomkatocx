@@ -43,27 +43,27 @@
             padding: 10px;
             border-bottom: 1px solid #FFB6C1;
             background-color: #FFF0F5;
-            display: flex;
-            flex-direction: row;
-            overflow-x: auto;
-            white-space: nowrap;
+            display: flex; /* Display as flexbox */
+            flex-direction: row; /* Horizontal layout */
+            overflow-x: auto; /* Horizontal scrolling */
+            white-space: nowrap; /* Prevent wrapping */
             max-height: 100px;
         }
 
         #user-list div {
-            margin-right: 5px;
-            flex-shrink: 0;
-            position: relative;
+            margin-right: 5px; /* Add space between user names */
+            flex-shrink: 0; /* Prevent usernames from shrinking */
+            position: relative; /* Establish positioning context for ::after */
         }
 
         #user-list div::after {
-            content: '';
-            display: inline-block;
-            height: 100%;
-            width: 1px;
-            background-color: #FF7F50;
-            margin-left: 5px;
-            vertical-align: middle;
+            content: ''; /* Required to display pseudo-element */
+            display: inline-block; /* Ensure line is inline with the text */
+            height: 100%; /* Height of the vertical line */
+            width: 1px; /* Thickness of the vertical line */
+            background-color: #FF7F50; /* Color of the line matching the upper banner */
+            margin-left: 5px; /* Margin left for spacing after the username */
+            vertical-align: middle; /* Align line vertically in the middle */
         }
 
         #messages {
@@ -153,7 +153,7 @@
 </head>
 <body>
     <div id="chat-container">
-        <div id="chat-header">{{ username }}: {{ room }}</div>
+        <div id="chat-header">{{ username }}: {{ room }}</div> <!-- Updated to show both username and room -->
         <div id="user-list"><strong>Active Users:</strong></div>
         <div id="messages"></div>
         <form id="chat-form">
@@ -225,6 +225,12 @@
             console.log("Leaving room:", room);
             socket.emit('leave', {'username': username, 'room': room, 'language': language});
         };
+
+        // Listen for window resize events to detect keyboard show/hide on mobile
+        window.addEventListener('resize', function() {
+            var messages = document.getElementById('messages');
+            messages.scrollTop = messages.scrollHeight; // Scroll to bottom when keyboard is hidden
+        });
     </script>
 </body>
 </html>
