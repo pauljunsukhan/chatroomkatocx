@@ -49,10 +49,10 @@
 
         input[type="text"],
         select {
-            width: calc(100% - 20px); /* Make the input fields not too long */
+            width: calc(100% - 20px); /* Make input and select fields the same width */
             padding: 10px;
-            margin-top: 5px; /* Reduce margin to bring fields closer */
-            margin-bottom: 10px; /* Reduce margin to bring fields closer */
+            margin-top: 5px; /* Keep margin consistent for spacing */
+            margin-bottom: 10px; /* Keep margin consistent for spacing */
             border-radius: 20px;
             border: 1px solid #FFB6C1; /* LightPink border */
             outline: none;
@@ -61,6 +61,8 @@
             color: #333; /* Text color */
             appearance: none; /* Removes default styling */
             -webkit-appearance: none; /* Removes default styling on Safari */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+            -moz-appearance: none; /* Removes default styling on Firefox */
         }
 
         #join-button {
@@ -72,12 +74,19 @@
             font-size: 16px;
             cursor: pointer;
             transition: background-color 0.3s;
-            width: 100%; /* Full width for consistency */
-            margin-top: 10px; /* Add some margin at the top for spacing */
+            width: calc(100% - 20px); /* Make button the same width as input fields */
+            margin: 10px 0; /* Add some margin at the top and bottom for spacing */
+            align-self: center; /* Center align the button */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
         }
 
         #join-button:hover {
             background-color: #FF4500; /* OrangeRed hover effect */
+        }
+
+        /* Remove dropdown arrow in IE */
+        select::-ms-expand {
+            display: none;
         }
 
         @media (max-width: 600px) {
