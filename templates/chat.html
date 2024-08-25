@@ -15,22 +15,23 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
+
         #chat-container {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             width: 90vw;
-            max-width: 600px;
-            height: 90vh;
-            max-height: 700px;
+            height: 100vh;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             overflow: hidden;
             background-color: #fff;
+            position: relative;
         }
+
         #chat-header {
             background-color: #FF7F50;
             color: white;
@@ -38,40 +39,49 @@
             text-align: center;
             font-size: 20px;
             font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
+
         #user-list {
             padding: 10px;
             border-bottom: 1px solid #FFB6C1;
             background-color: #FFF0F5;
-            display: flex; /* Display as flexbox */
-            flex-direction: row; /* Horizontal layout */
-            overflow-x: auto; /* Horizontal scrolling */
-            white-space: nowrap; /* Prevent wrapping */
+            display: flex;
+            flex-direction: row;
+            overflow-x: auto;
+            white-space: nowrap;
             max-height: 100px;
+            flex-shrink: 0;
         }
 
         #user-list div {
-            margin-right: 5px; /* Add space between user names */
-            flex-shrink: 0; /* Prevent usernames from shrinking */
-            position: relative; /* Establish positioning context for ::after */
+            margin-right: 5px;
+            flex-shrink: 0;
+            position: relative;
         }
 
         #user-list div::after {
-            content: ''; /* Required to display pseudo-element */
-            display: inline-block; /* Ensure line is inline with the text */
-            height: 100%; /* Height of the vertical line */
-            width: 1px; /* Thickness of the vertical line */
-            background-color: #FF7F50; /* Color of the line matching the upper banner */
-            margin-left: 5px; /* Margin left for spacing after the username */
-            vertical-align: middle; /* Align line vertically in the middle */
+            content: '';
+            display: inline-block;
+            height: 100%;
+            width: 1px;
+            background-color: #FF7F50;
+            margin-left: 5px;
+            vertical-align: middle;
         }
 
         #messages {
+            display: flex;
+            flex-direction: column-reverse; /* Reverse the flow of messages */
             padding: 20px;
             overflow-y: auto;
             flex-grow: 1;
             background-color: #FFF5EE;
+            -webkit-overflow-scrolling: touch;
         }
+
         .message {
             margin-bottom: 15px;
             padding: 10px;
@@ -79,23 +89,29 @@
             max-width: 80%;
             word-wrap: break-word;
         }
+
         .message strong {
             color: #FF4500;
         }
+
         .message.user {
             background-color: #FFD700;
             align-self: flex-end;
         }
+
         .message.other {
             background-color: #F0E68C;
             align-self: flex-start;
         }
+
         #chat-form {
             display: flex;
             padding: 10px;
             background-color: #FFF0F5;
             border-top: 1px solid #FFB6C1;
+            flex-direction: column;
         }
+
         #message {
             flex-grow: 1;
             padding: 10px;
@@ -103,37 +119,43 @@
             border-radius: 20px;
             border: 1px solid #FFB6C1;
             outline: none;
+            margin-bottom: 10px;
         }
+
         #send-button {
             background-color: #FF6347;
             color: white;
             border: none;
             border-radius: 20px;
             padding: 10px 20px;
-            margin-left: 10px;
             font-size: 16px;
             cursor: pointer;
             transition: background-color 0.3s;
+            width: 100%;
         }
+
         #send-button:hover {
             background-color: #FF4500;
         }
+
         @media (orientation: landscape) {
             #chat-container {
                 width: 70vw;
                 height: 70vh;
             }
         }
+
         @media (orientation: portrait) {
             #chat-container {
                 width: 90vw;
                 height: 90vh;
             }
         }
+
         @media (max-width: 600px) {
             #chat-container {
                 width: 100vw;
-                height: 100vh;
+                height: calc(100vh - 20px);
             }
             #messages {
                 padding: 10px;
@@ -153,7 +175,7 @@
 </head>
 <body>
     <div id="chat-container">
-        <div id="chat-header">{{ username }}: {{ room }}</div> <!-- Updated to show both username and room -->
+        <div id="chat-header">{{ username }}: {{ room }}</div>
         <div id="user-list"><strong>Active Users:</strong></div>
         <div id="messages"></div>
         <form id="chat-form">
@@ -197,8 +219,7 @@
             message.classList.add('message');
             message.classList.add(data.username === username ? 'user' : 'other');
             message.innerHTML = '<strong>' + data.username + ':</strong> ' + data.msg;
-            messages.appendChild(message);
-            messages.scrollTop = messages.scrollHeight;
+            messages.insertBefore(message, messages.firstChild); // Insert message at the top of the container
         });
 
         socket.on('disconnect', function() {
@@ -226,11 +247,14 @@
             socket.emit('leave', {'username': username, 'room': room, 'language': language});
         };
 
-        // Listen for window resize events to detect keyboard show/hide on mobile
-        window.addEventListener('resize', function() {
-            var messages = document.getElementById('messages');
-            messages.scrollTop = messages.scrollHeight; // Scroll to bottom when keyboard is hidden
-        });
+        function adjustHeight() {
+            var chatContainer = document.getElementById('chat-container');
+            chatContainer.style.height = window.innerHeight + 'px';
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+
+        window.addEventListener('resize', adjustHeight);
+        window.addEventListener('load', adjustHeight);
     </script>
 </body>
 </html>
